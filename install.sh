@@ -102,13 +102,21 @@ if [[ ! -d /etc/tiny-dfr || ! -w /etc/tiny-dfr ]]; then
   /usr/bin/sudo /usr/bin/chown "$(/usr/bin/id -un):$(/usr/bin/id -gn)" /etc/tiny-dfr/config.toml
 fi
 
-backlight_rule=/etc/udev/rules.d/99-touchbar-backlight.rules
-if [[ ! -e $backlight_rule ]]; then
-  echo "Allowing the session to hold the Touch Bar backlight on (sudo required)."
-  /usr/bin/sudo /usr/bin/install -m 0644 "$project_dir/integration/99-touchbar-backlight.rules" "$backlight_rule"
+# The daemon reads the Touch Bar digitizer and the internal keyboard (Fn) and
+# writes the Touch Bar backlight. Grant those to this user only, rather than
+# requiring the input group, which can read every keyboard.
+access_rule=/etc/udev/rules.d/99-touchbar-access.rules
+access_rendered=$(/usr/bin/sed -e "s/@USER@/$(/usr/bin/id -un)/g" -e "s/@GROUP@/$(/usr/bin/id -gn)/g" \
+  "$project_dir/integration/99-touchbar-access.rules")
+legacy_backlight_rule=/etc/udev/rules.d/99-touchbar-backlight.rules
+if [[ -e $legacy_backlight_rule ]] || ! /usr/bin/cmp -s <(printf '%s\n' "$access_rendered") "$access_rule"; then
+  echo "Granting this user the Touch Bar input devices and backlight (sudo required)."
+  printf '%s\n' "$access_rendered" | /usr/bin/sudo /usr/bin/tee "$access_rule" >/dev/null
+  /usr/bin/sudo /usr/bin/rm -f "$legacy_backlight_rule"
   /usr/bin/sudo /usr/bin/udevadm control --reload-rules
-  /usr/bin/sudo /usr/bin/chgrp input /sys/class/backlight/appletb_backlight/brightness
-  /usr/bin/sudo /usr/bin/chmod g+w /sys/class/backlight/appletb_backlight/brightness
+  /usr/bin/sudo /usr/bin/udevadm trigger --action=change --subsystem-match=input
+  /usr/bin/sudo /usr/bin/udevadm trigger --action=add --subsystem-match=backlight --sysname-match=appletb_backlight
+  /usr/bin/sudo /usr/bin/udevadm settle
 fi
 
 panel_reset=/usr/local/lib/touchbar-panel-reset
