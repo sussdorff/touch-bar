@@ -81,6 +81,29 @@ idle_refresh = 300          # seconds otherwise
 #   windows              cap on "jump to window" buttons (0 to drop them)
 
 [[profiles]]
+name = "YouTube"
+# Before Browser so a YouTube tab or the YouTube web app gets player keys.
+# Buttons send YouTube's own shortcuts; they act on the video page, not on
+# the browser.
+match = "^chrome-(www\\.|m\\.)?youtube\\.com"
+match_title = "(^| - )YouTube( - |$)"
+icon = ""
+icon_color = "red"
+collapse_workspaces = true
+windows = 0
+show_identity = false
+buttons = [
+  { label = "", keys = "J",       hint = "Back 10 s" },
+  { label = "\U000F040E", keys = "K",   color = "red", hint = "Play / pause" },
+  { label = "", keys = "L",       hint = "Forward 10 s" },
+  { label = "", keys = "SHIFT+N", hint = "Next video" },
+  { label = "", keys = "M",       hint = "Mute" },
+  { label = "CC",     keys = "C",       hint = "Captions" },
+  { label = "", keys = "T",       hint = "Theater mode" },
+  { label = "", keys = "F",       hint = "Full screen" },
+]
+
+[[profiles]]
 name = "Browser"
 match_tag = "browser$"
 match = "^(zen|zen-.*|chrome-.*|chromium|Chromium|brave-browser|firefox|librewolf|google-chrome|Google-chrome)"
