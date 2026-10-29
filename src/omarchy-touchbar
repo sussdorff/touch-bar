@@ -4382,6 +4382,18 @@ def find_digitizer():
     return find_input_device(DIGITIZER_NAME)
 
 
+_input_access_warned = set()
+
+
+def warn_input_access(exc):
+    """Say once per device why it is unreadable; the watchers retry silently."""
+    if exc.filename in _input_access_warned:
+        return
+    _input_access_warned.add(exc.filename)
+    sys.stderr.write("omarchy-touchbar: cannot read %s (%s); re-run install.sh "
+                     "to grant Touch Bar input access\n" % (exc.filename, exc.strerror))
+
+
 def watch_fn(bar):
     """Use a Fn tap as the hardware-dashboard toggle without mid-press reloads."""
     path = find_input_device(KEYBOARD_NAME)
@@ -4409,6 +4421,9 @@ def watch_fn(bar):
                         bar.fn_down = False
                         bar.touch_released_at = time.monotonic()
                         bar.flush()
+        except PermissionError as exc:
+            warn_input_access(exc)
+            bar.fn_down = False
         except OSError:
             bar.fn_down = False
         time.sleep(2)
@@ -4493,6 +4508,8 @@ def watch_touches(bar):
                                     except Exception as exc:  # keep touch thread alive
                                         sys.stderr.write(
                                             "omarchy-touchbar: touch action failed: %s\n" % exc)
+        except PermissionError as exc:
+            warn_input_access(exc)
         except OSError:
             pass
         bar.touch_down = False          # never latch the gate across a reconnect
