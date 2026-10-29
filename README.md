@@ -94,6 +94,22 @@ prepare `/etc/tiny-dfr`, allow the session to hold the Touch Bar backlight,
 and install the post-resume panel reset. `./uninstall.sh` reverses the
 user-level parts.
 
+### Recovery after resume
+
+`touchbar-panel-reset.service` runs after every resume. Choose what it does
+with `--resume-mode` (stored in `/etc/touchbar-panel-reset.conf`; an existing
+choice is kept when the flag is omitted):
+
+```bash
+./install.sh --resume-mode restart   # default: restart tiny-dfr only
+./install.sh --resume-mode rebind    # also unbind and rebind appletbdrm
+```
+
+`restart` resets nothing on the T2 USB bridge, so a wedged panel can stay
+blank until `sudo systemctl restart tiny-dfr`. `rebind` clears a wedged panel,
+but it resets a device on the same `t2bce` bridge as the internal keyboard,
+which other T2 users have linked to hangs on resume.
+
 ## Commands
 
 ```bash

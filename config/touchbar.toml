@@ -47,8 +47,8 @@ media = true                # MPRIS transport wherever something is playing
 claude = true               # Claude Code read-out when a session is focused
 chatgpt = true              # ChatGPT/Codex telemetry tiles
 browser_tabs = true         # live favicon tab strip in Firefox-family browsers
-football = true             # Premier League page in the mode cycle
-goal_celebrations = true    # full-bar goal scene when a PL goal is scored
+football = false            # Premier League page in the mode cycle (polls ESPN)
+goal_celebrations = false   # full-bar goal scene when a PL goal is scored
 
 # Built-in Premier League live centre: live scores, table, fixtures and your
 # club, refreshed off the render path. Leave `team` empty to follow the club
