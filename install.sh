@@ -9,11 +9,27 @@ omarchy_config="${HOME}/.config/omarchy"
 hypr_config="${HOME}/.config/hypr"
 user_systemd="${HOME}/.config/systemd/user"
 force_config=false
+resume_mode=""
+usage="Usage: ./install.sh [--force-config] [--resume-mode restart|rebind]"
 
-if [[ "${1:-}" == "--force-config" ]]; then
-  force_config=true
-elif [[ $# -gt 0 ]]; then
-  echo "Usage: ./install.sh [--force-config]" >&2
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --force-config) force_config=true ;;
+    --resume-mode)
+      resume_mode=${2:-}
+      shift
+      ;;
+    --resume-mode=*) resume_mode=${1#*=} ;;
+    *)
+      echo "$usage" >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+if [[ -n $resume_mode && $resume_mode != restart && $resume_mode != rebind ]]; then
+  echo "$usage" >&2
   exit 2
 fi
 
@@ -104,6 +120,15 @@ if [[ ! -e $panel_reset ]] \
     /etc/systemd/system/touchbar-panel-reset.service
   /usr/bin/sudo /usr/bin/systemctl daemon-reload
   /usr/bin/sudo /usr/bin/systemctl enable touchbar-panel-reset.service
+fi
+
+# Keep an existing choice unless --resume-mode asks for one.
+resume_conf=/etc/touchbar-panel-reset.conf
+if [[ -n $resume_mode || ! -e $resume_conf ]]; then
+  resume_mode=${resume_mode:-restart}
+  echo "Setting the post-resume Touch Bar recovery to '$resume_mode' (sudo required)."
+  printf '# Touch Bar recovery after resume: restart (safe default) or rebind.\nmode=%s\n' \
+    "$resume_mode" | /usr/bin/sudo /usr/bin/tee "$resume_conf" >/dev/null
 fi
 
 /usr/bin/python3 -m py_compile "$user_bin/omarchy-touchbar" "$user_bin/omarchy-chatgpt-dictate" \
